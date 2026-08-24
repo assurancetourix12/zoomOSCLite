@@ -1,0 +1,23 @@
+[tools]
+rust = "1.97.1"
+
+[tasks.build]
+run = "cargo build"
+
+[tasks.test]
+run = "cargo test"
+
+[tasks.check]
+run = "cargo check"
+
+[tasks.fmt]
+run = "cargo fmt --check"
+
+[tasks.app]
+run = "sh scripts/build-app.sh"
+
+[tasks.run]
+run = "cargo run -- serve"
+
+[tasks.release]
+run = "sh scripts/release.sh"

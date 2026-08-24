@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>pt</string>
+    <key>CFBundleDisplayName</key>
+    <string>ZoomOSC Lite</string>
+    <key>CFBundleExecutable</key>
+    <string>ZoomOSCLite</string>
+    <key>CFBundleIdentifier</key>
+    <string>pt.joaocarvalho.zoomosc-lite</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>ZoomOSC Lite</string>
+    <key>CFBundleIconFile</key>
+    <string>ZoomOSCLite</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>0.1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>13.0</string>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.utilities</string>
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>O ZoomOSC Lite recebe comandos OSC de controladores na rede local.</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>O ZoomOSC Lite necessita de controlar o Zoom para iniciar e parar a partilha.</string>
+</dict>
+</plist>

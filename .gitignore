@@ -1,0 +1,8 @@
+/target/
+/dist/
+/release/
+/resources/ZoomOSCLite.icns
+__pycache__/
+*.py[cod]
+.DS_Store
+._*

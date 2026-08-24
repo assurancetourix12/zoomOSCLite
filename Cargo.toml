@@ -1,0 +1,16 @@
+[package]
+name = "zoomosc-lite"
+version = "0.1.0"
+edition = "2024"
+description = "Small open-source OSC remote for the Zoom macOS client"
+license = "MIT"
+
+[lib]
+name = "zoomosc_lite"
+path = "src/lib.rs"
+crate-type = ["staticlib"]
+
+[profile.release]
+lto = true
+strip = true
+codegen-units = 1
