@@ -1,0 +1,62 @@
+name: Release Universal 2
+
+on:
+  push:
+    branches:
+      - prod
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-prod
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Test, build, and release
+    runs-on: macos-14
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        run: |
+          rustup toolchain install 1.97.1 --profile minimal --component clippy,rustfmt
+          rustup target add --toolchain 1.97.1 aarch64-apple-darwin x86_64-apple-darwin
+          rustup default 1.97.1
+
+      - name: Validate source
+        run: |
+          cargo fmt --all -- --check
+          cargo test
+          cargo clippy --all-targets -- -D warnings
+
+      - name: Build Universal 2 release
+        run: sh scripts/release.sh
+
+      - name: Verify release
+        run: |
+          VERSION=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' resources/Info.plist)
+          ARCHIVE="release/ZoomOSC-Lite-v${VERSION}-macOS-universal2.zip"
+          lipo "dist/ZoomOSC Lite.app/Contents/MacOS/ZoomOSCLite" -verify_arch arm64 x86_64
+          codesign --verify --deep --strict "dist/ZoomOSC Lite.app"
+          cd release
+          shasum -a 256 -c "$(basename "$ARCHIVE").sha256"
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' resources/Info.plist)
+          TAG="v${VERSION}-prod.${GITHUB_RUN_NUMBER}"
+          ARCHIVE="release/ZoomOSC-Lite-v${VERSION}-macOS-universal2.zip"
+          gh release create "$TAG" \
+            "$ARCHIVE" \
+            "$ARCHIVE.sha256" \
+            --target "$GITHUB_SHA" \
+            --title "ZoomOSC Lite ${TAG}" \
+            --generate-notes

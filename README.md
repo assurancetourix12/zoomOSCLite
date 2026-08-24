@@ -7,6 +7,12 @@ sharing, microphone mute, video, and Zoom audio profiles.
 It does not contain Zoom code or use the Zoom SDK. It controls the official Zoom
 client through the macOS Accessibility API.
 
+> **Maintenance status**
+>
+> This project is not actively maintained. I currently update it only when I
+> need changes for my own use. Issues and pull requests are welcome, but
+> responses, fixes, and new releases are not guaranteed.
+
 ## Requirements
 
 - macOS 13 or later on Apple Silicon or Intel
@@ -153,6 +159,10 @@ SHA-256 checksum:
 ```sh
 mise run release
 ```
+
+Every squash merge into the protected `prod` branch runs the same validation and
+publishes a Universal 2 GitHub release automatically. Automatic release tags use
+the format `v<app-version>-prod.<workflow-run>`.
 
 The current build uses an ad-hoc signature. Public distribution without macOS
 Gatekeeper warnings requires an Apple Developer ID certificate and Apple
