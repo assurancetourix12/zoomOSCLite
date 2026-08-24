@@ -184,6 +184,16 @@ impl AxElement {
         ))
     }
 
+    fn raise(self) -> Result<(), String> {
+        let action = cf_string("AXRaise").ok_or("não foi possível criar AXRaise")?;
+        let result = unsafe { AXUIElementPerformAction(self.0, action.0) };
+        if result == AX_SUCCESS {
+            Ok(())
+        } else {
+            Err(format!("AXRaise falhou com código {result}"))
+        }
+    }
+
     fn searchable_text(self) -> String {
         ["AXTitle", "AXDescription", "AXValue", "AXHelp"]
             .iter()
@@ -297,6 +307,48 @@ fn focused_window(application: AxElement) -> Option<CfOwned> {
             None
         }
     }
+}
+
+fn meeting_window(application: AxElement) -> Option<CfOwned> {
+    let title_aliases = [
+        "zoom meeting",
+        "reunião zoom",
+        "reuniao zoom",
+        "zoom webinar",
+        "webinar zoom",
+    ];
+    let audio_aliases = [
+        "ativar áudio",
+        "ativar audio",
+        "desativar áudio",
+        "desativar audio",
+        "unmute audio",
+        "mute audio",
+    ];
+    let video_aliases = [
+        "iniciar vídeo",
+        "iniciar video",
+        "interromper vídeo",
+        "interromper video",
+        "start video",
+        "stop video",
+    ];
+
+    let windows = application.children();
+    windows.into_iter().find(|window| {
+        let element = AxElement(window.0 as AXUIElementRef);
+        let role = element.string_attribute("AXRole").unwrap_or_default();
+        if role != "AXWindow" {
+            return false;
+        }
+        let title = element
+            .string_attribute("AXTitle")
+            .unwrap_or_default()
+            .to_lowercase();
+        title_aliases.iter().any(|alias| title.contains(alias))
+            || (tree_contains_title(element, &audio_aliases)
+                && tree_contains_title(element, &video_aliases))
+    })
 }
 
 fn contains_alias(text: &str, aliases: &[&str]) -> bool {
@@ -556,12 +608,18 @@ fn activate_zoom() -> Result<(), String> {
         .args(["-a", "zoom.us"])
         .status()
         .map_err(|error| format!("não foi possível ativar o Zoom: {error}"))?;
-    if status.success() {
-        thread::sleep(Duration::from_millis(350));
-        Ok(())
-    } else {
-        Err("o macOS recusou ativar o Zoom".to_owned())
+    if !status.success() {
+        return Err("o macOS recusou ativar o Zoom".to_owned());
     }
+
+    thread::sleep(Duration::from_millis(150));
+    let application = zoom_application()?;
+    let root = AxElement(application.0 as AXUIElementRef);
+    let window = meeting_window(root).ok_or("não foi encontrada uma janela de reunião do Zoom")?;
+    AxElement(window.0 as AXUIElementRef).raise()?;
+    thread::sleep(Duration::from_millis(150));
+    log("Zoom: janela da reunião elevada");
+    Ok(())
 }
 
 fn send_command_shift_s() -> Result<(), String> {
@@ -856,10 +914,6 @@ fn set_audio_profile(profile: &str) -> Result<(), String> {
         ],
         _ => return Err(format!("perfil de áudio desconhecido: {profile}")),
     };
-
-    // Traz a janela da reunião para a frente caso outra janela do Zoom esteja ativa.
-    let _ = find_exact_title_and_press(root, &["Reunião Zoom", "Zoom Meeting"]);
-    thread::sleep(Duration::from_millis(300));
 
     let audio_options = [
         "Opções de áudio",
