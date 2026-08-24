@@ -4,7 +4,7 @@ set -eu
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 VERSION=$(defaults read "$ROOT/resources/Info" CFBundleShortVersionString 2>/dev/null || /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$ROOT/resources/Info.plist")
 RELEASE_DIR="$ROOT/release"
-ARCHIVE="$RELEASE_DIR/ZoomOSC-Lite-v$VERSION-macOS-arm64.zip"
+ARCHIVE="$RELEASE_DIR/ZoomOSC-Lite-v$VERSION-macOS-universal2.zip"
 
 sh "$ROOT/scripts/build-app.sh"
 mkdir -p "$RELEASE_DIR"

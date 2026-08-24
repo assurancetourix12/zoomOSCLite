@@ -9,7 +9,7 @@ client through the macOS Accessibility API.
 
 ## Requirements
 
-- macOS 13 or later on Apple Silicon
+- macOS 13 or later on Apple Silicon or Intel
 - The Zoom Workplace desktop client
 - A Zoom meeting in progress
 - macOS Accessibility permission for ZoomOSC Lite
@@ -147,7 +147,8 @@ mise run app
 
 The application is created at `dist/ZoomOSC Lite.app`.
 
-To create an ARM64 ZIP and its SHA-256 checksum:
+To create a Universal 2 ZIP for Apple Silicon and Intel, together with its
+SHA-256 checksum:
 
 ```sh
 mise run release
