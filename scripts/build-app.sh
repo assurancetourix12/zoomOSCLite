@@ -18,6 +18,7 @@ swiftc -parse-as-library \
   -module-cache-path "$SWIFT_CACHE" \
   -framework SwiftUI \
   -framework AppKit \
+  -framework ServiceManagement \
   "$ROOT/macos/ZoomOSCLiteApp.swift" \
   "$ROOT/target/release/libzoomosc_lite.a" \
   -o "$APP/Contents/MacOS/ZoomOSCLite"

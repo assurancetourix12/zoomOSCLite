@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import Darwin
+import ServiceManagement
 
 @_silgen_name("zoomosc_execute")
 private func zoomoscExecute(_ command: UnsafePointer<CChar>) -> Int32
@@ -18,6 +19,7 @@ final class ServerController: ObservableObject {
     @Published var status = "Parado"
     @Published var lastMessage = ""
     @Published var isRunning = false
+    @Published var launchAtLogin = false
 
     private var socketFD: Int32 = -1
     private var socketSource: DispatchSourceRead?
@@ -27,6 +29,7 @@ final class ServerController: ObservableObject {
         let savedPort = defaults.integer(forKey: "oscPort")
         portText = String(savedPort == 0 ? 9000 : savedPort)
         networkMode = defaults.string(forKey: "networkMode") ?? "local"
+        launchAtLogin = SMAppService.mainApp.status == .enabled
     }
 
     var bindAddress: String {
@@ -121,6 +124,23 @@ final class ServerController: ObservableObject {
             NSWorkspace.shared.open(url)
         }
     }
+
+    func setLaunchAtLogin(_ enabled: Bool) {
+        do {
+            if enabled {
+                try SMAppService.mainApp.register()
+            } else {
+                try SMAppService.mainApp.unregister()
+            }
+            launchAtLogin = SMAppService.mainApp.status == .enabled
+            lastMessage = launchAtLogin
+                ? "Arranque automático ativado"
+                : "Arranque automático desativado"
+        } catch {
+            launchAtLogin = SMAppService.mainApp.status == .enabled
+            lastMessage = "Não foi possível alterar o arranque automático: \(error.localizedDescription)"
+        }
+    }
 }
 
 struct ContentView: View {
@@ -187,6 +207,11 @@ struct ContentView: View {
                 .keyboardShortcut(.defaultAction)
                 .disabled(!server.portIsValid)
             }
+
+            Toggle("Iniciar ao entrar no macOS", isOn: Binding(
+                get: { server.launchAtLogin },
+                set: { server.setLaunchAtLogin($0) }
+            ))
 
             GroupBox("Comandos principais") {
                 VStack(spacing: 2) {

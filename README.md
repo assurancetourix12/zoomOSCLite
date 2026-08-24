@@ -28,7 +28,8 @@ Ao abrir, a aplicação apresenta uma janela nativa onde é possível escolher:
 
 O botão **Aplicar e reiniciar** guarda a configuração nas preferências do macOS
 e reinicia apenas o servidor OSC. A configuração é restaurada no próximo
-arranque.
+arranque. A opção **Iniciar ao entrar no macOS** permite lançar automaticamente
+a aplicação no início da sessão, através do mecanismo nativo do macOS.
 
 ## Primeira execução
 
