@@ -1,120 +1,178 @@
 # ZoomOSC Lite
 
-Pequeno controlo OSC open source para o cliente Zoom no macOS. Permite controlar
-partilha, microfone, vídeo e perfis de áudio a partir de um controlador OSC como
-o Bitfocus Companion.
+ZoomOSC Lite is a small open-source OSC remote for the Zoom Workplace client on
+macOS. It lets an OSC controller such as Bitfocus Companion control camera
+sharing, microphone mute, video, and Zoom audio profiles.
 
-Não contém código nem SDK do Zoom. Controla o cliente oficial através da API de
-Acessibilidade do macOS.
+It does not contain Zoom code or use the Zoom SDK. It controls the official Zoom
+client through the macOS Accessibility API.
 
-## Compilar
+## Requirements
 
-Requer macOS 13 ou posterior, Xcode Command Line Tools, Rust e
+- macOS 13 or later on Apple Silicon
+- The Zoom Workplace desktop client
+- A Zoom meeting in progress
+- macOS Accessibility permission for ZoomOSC Lite
+
+## Install and run
+
+1. Download the latest ZIP from
+   [GitHub Releases](https://github.com/assurancetourix12/zoomOSCLite/releases).
+2. Extract it and move **ZoomOSC Lite.app** to `/Applications`.
+3. Open ZoomOSC Lite.
+4. Open **System Settings → Privacy & Security → Accessibility** and enable
+   **ZoomOSC Lite**.
+5. Return to ZoomOSC Lite and start or restart the OSC server.
+
+The application starts with these safe defaults:
+
+- **This Mac only** (`Apenas este Mac`): `127.0.0.1`
+- **UDP port:** `9000`
+
+Select **Local network** (`Rede local`) when Companion is running on another
+computer or device. Click **Apply and restart** (`Aplicar e reiniciar`) after
+changing the access mode or port.
+
+The **Launch at login** (`Iniciar ao entrar no macOS`) option registers the
+application with the native macOS login-items service. For reliable login
+launching, keep the application in `/Applications`.
+
+> OSC is transported over UDP without authentication. Only enable **Local
+> network** on a trusted network, and never expose the UDP port to the Internet.
+
+## Bitfocus Companion setup
+
+ZoomOSC Lite works with Companion's
+[**Generic → OSC** connection](https://bitfocus.io/connections/generic-osc). No
+dedicated Companion module is required.
+
+### 1. Add the Generic OSC connection
+
+1. Open the Companion web interface.
+2. Go to **Connections** and select **Add connection**.
+3. Search for **OSC** and add **Generic → OSC**.
+4. Give the connection a useful name, such as `ZoomOSC Lite`.
+5. Set the target IP:
+   - If Companion and ZoomOSC Lite run on the same Mac, use `127.0.0.1` and
+     leave ZoomOSC Lite in **This Mac only** mode.
+   - If Companion runs on another device, enter the IP address of the Mac
+     running ZoomOSC Lite and select **Local network** in ZoomOSC Lite.
+6. Set the target port to `9000`, or to the custom UDP port shown in ZoomOSC
+   Lite.
+7. Use **UDP** as the transport, then save the connection.
+
+Because OSC over UDP is connectionless, Companion may not be able to prove that
+ZoomOSC Lite is reachable. Check the **Last message** field in ZoomOSC Lite after
+pressing a test button.
+
+### 2. Add an action to a Companion button
+
+1. Open **Buttons** and select the button you want to configure.
+2. In the button's **Actions** section, add a **press/down** action.
+3. Select the `ZoomOSC Lite` Generic OSC connection.
+4. Choose **Send message without arguments**.
+5. Paste one of the OSC paths from the table below into the **OSC path** field.
+6. Save the button and press it while a Zoom meeting is open.
+
+The commands do not need an OSC value or argument. For example, a microphone
+mute button only needs this path:
+
+```text
+/zoom/audio/mute
+```
+
+For separate ON and OFF controls, create separate Companion buttons and assign
+the corresponding absolute command to each one. Alternatively, add different
+commands to the button's press and release actions if that suits your workflow.
+
+## OSC commands
+
+| OSC path | Action |
+| --- | --- |
+| `/zoom/share/camera/start` | Select and share content from the second camera |
+| `/zoom/share/stop` | Stop the current share |
+| `/zoom/audio/mute` | Mute the microphone if it is currently unmuted |
+| `/zoom/audio/unmute` | Unmute the microphone if it is currently muted |
+| `/zoom/video/on` | Start video if it is currently off |
+| `/zoom/video/off` | Stop video if it is currently on |
+| `/zoom/audio/profile/noise-removal` | Select Zoom background-noise removal |
+| `/zoom/audio/profile/isolation` | Select personalized audio isolation |
+| `/zoom/audio/profile/original` | Select original sound for musicians |
+| `/zoom/audio/profile/live-performance` | Select live performance audio |
+
+ZoomOSC-style aliases are also available:
+
+| Alias | Equivalent command |
+| --- | --- |
+| `/zoom/me/startCameraShare` | `/zoom/share/camera/start` |
+| `/zoom/me/stopShare` | `/zoom/share/stop` |
+| `/zoom/me/mute` | `/zoom/audio/mute` |
+| `/zoom/me/unmute` | `/zoom/audio/unmute` |
+| `/zoom/me/startVideo` | `/zoom/video/on` |
+| `/zoom/me/stopVideo` | `/zoom/video/off` |
+
+The microphone and video commands are absolute and idempotent: ZoomOSC Lite
+checks the current Zoom state and does nothing if the requested state is already
+active.
+
+## Troubleshooting
+
+- Make sure a Zoom meeting is open and its window is visible.
+- Confirm that ZoomOSC Lite is enabled in macOS Accessibility settings.
+- If Companion is on another device, select **Local network** in ZoomOSC Lite
+  and use the Mac's LAN IP instead of `127.0.0.1`.
+- Confirm that the UDP port is identical in both applications.
+- Check **Last message** in ZoomOSC Lite to see whether a command arrived and
+  whether it succeeded.
+- After replacing the application with a new version, macOS may require you to
+  remove and re-enable its Accessibility permission.
+
+For detailed Accessibility diagnostics, run the helper while Zoom is visible:
+
+```sh
+zoomosc-lite inspect
+```
+
+This prints the control names exposed by the installed Zoom version. It is
+useful when a Zoom update or translation changes the interface labels.
+
+## Build from source
+
+Building requires Xcode Command Line Tools, Rust, and
 [mise](https://mise.jdx.dev/).
 
 ```sh
 mise run app
 ```
 
-A aplicação é criada em `dist/ZoomOSC Lite.app`.
+The application is created at `dist/ZoomOSC Lite.app`.
 
-## Janela de configuração
-
-Ao abrir, a aplicação apresenta uma janela nativa onde é possível escolher:
-
-- **Apenas este Mac** (`127.0.0.1`), o modo seguro predefinido;
-- **Rede local** (`0.0.0.0`), para receber OSC de outro dispositivo;
-- porta UDP, com `9000` como valor predefinido.
-
-O botão **Aplicar e reiniciar** guarda a configuração nas preferências do macOS
-e reinicia apenas o servidor OSC. A configuração é restaurada no próximo
-arranque. A opção **Iniciar ao entrar no macOS** permite lançar automaticamente
-a aplicação no início da sessão, através do mecanismo nativo do macOS.
-
-## Primeira execução
-
-1. Abre `ZoomOSC Lite.app`.
-2. Em **Definições do Sistema → Privacidade e Segurança → Acessibilidade**,
-   autoriza **ZoomOSC Lite**.
-3. Volta a abrir a aplicação.
-
-Ao abrir pela primeira vez, a aplicação escuta apenas em `127.0.0.1:9000`. Para
-execução direta do helper Rust, também é possível usar:
-
-```sh
-zoomosc-lite serve 127.0.0.1:9000
-```
-
-Não encaminhes esta porta UDP na Internet.
-
-> O protocolo UDP desta versão não tem autenticação. Usa o modo **Rede local**
-> apenas numa rede de confiança.
-
-## Comandos OSC
-
-| Endereço | Ação |
-| --- | --- |
-| `/zoom/share/camera/start` | Abre Avançadas, seleciona a segunda câmara e partilha |
-| `/zoom/me/startCameraShare` | Alias compatível com o estilo do ZoomOSC |
-| `/zoom/share/stop` | Para a partilha atual |
-| `/zoom/me/stopShare` | Alias compatível com o estilo do ZoomOSC |
-| `/zoom/audio/mute` | Desativa o microfone se estiver ativo |
-| `/zoom/audio/unmute` | Ativa o microfone se estiver desativado |
-| `/zoom/video/on` | Liga o vídeo se estiver desligado |
-| `/zoom/video/off` | Desliga o vídeo se estiver ligado |
-| `/zoom/audio/profile/noise-removal` | Seleciona remoção de ruído |
-| `/zoom/audio/profile/isolation` | Seleciona isolamento personalizado |
-| `/zoom/audio/profile/original` | Seleciona som original para músicos |
-| `/zoom/audio/profile/live-performance` | Seleciona áudio de performance ao vivo |
-
-Aliases adicionais no estilo ZoomOSC: `/zoom/me/mute`, `/zoom/me/unmute`,
-`/zoom/me/startVideo` e `/zoom/me/stopVideo`.
-
-Os comandos de áudio e vídeo são absolutos e idempotentes: a aplicação lê
-primeiro o estado atual e não envia um atalho quando o estado pedido já está
-ativo.
-
-O utilitário aceita mensagens OSC normais; os argumentos são ignorados nesta
-versão porque estas ações não precisam deles.
-
-## Diagnóstico
-
-Com o Zoom visível, executa:
-
-```sh
-zoomosc-lite inspect
-```
-
-Isto lista os nomes que a versão instalada do Zoom expõe à Acessibilidade. É
-útil caso uma atualização ou tradução altere os textos dos controlos.
-
-## Licença
-
-MIT
-
-## Criar uma release
+To create an ARM64 ZIP and its SHA-256 checksum:
 
 ```sh
 mise run release
 ```
 
-Cria em `release/` um ZIP macOS ARM64 e o respetivo ficheiro SHA-256. A
-assinatura atual é ad-hoc, adequada para testes e distribuição privada; uma
-release pública sem avisos do Gatekeeper requer um certificado Developer ID e
-notarização Apple.
+The current build uses an ad-hoc signature. Public distribution without macOS
+Gatekeeper warnings requires an Apple Developer ID certificate and Apple
+notarization.
 
-## Limitações
+## Limitations
 
-O ZoomOSC Lite usa a interface de Acessibilidade do cliente Zoom. Alterações na
-interface do Zoom podem exigir uma atualização dos seletores. Os nomes mais
-comuns em português e inglês estão incluídos.
+ZoomOSC Lite relies on the Accessibility interface exposed by Zoom. A future
+Zoom interface update may require its selectors to be updated. Common English
+and Portuguese labels are currently supported.
 
-## Contribuir
+## Contributing
 
-Issues e pull requests são bem-vindos. Antes de enviar alterações, executa:
+Issues and pull requests are welcome. Before submitting changes, run:
 
 ```sh
 cargo fmt --check
 cargo test
 cargo clippy --all-targets -- -D warnings
 ```
+
+## License
+
+[MIT](LICENSE)
